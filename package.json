@@ -1,0 +1,27 @@
+{
+  "name": "tutorial",
+  "version": "1.0.0",
+  "description": "tutorial app",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "make_exe": "electron-forge make --platform win32"
+  },
+  "author": "torihon62",
+  "license": "ISC",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.0.0",
+    "@electron-forge/maker-deb": "^7.0.0",
+    "@electron-forge/maker-rpm": "^7.0.0",
+    "@electron-forge/maker-squirrel": "^7.0.0",
+    "@electron-forge/maker-zip": "^7.0.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.0.0",
+    "electron": "^27.1.0"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0"
+  }
+}
