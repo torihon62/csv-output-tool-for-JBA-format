@@ -1,4 +1,5 @@
 const { app, ipcMain, BrowserWindow, dialog } = require('electron');
+const XLSX = require('xlsx');
 const path = require('node:path');
 
 const createWindow = () => {
@@ -30,4 +31,14 @@ ipcMain.handle('select-file', (event) => {
   // renderer プロセスにデータを返す
   const path = dialog.showOpenDialogSync({ properties: ['openFile', 'multiSelections'] });
   return path;
+})
+
+ipcMain.handle('read-xlsx', (event, path) => {
+  // renderer プロセスにデータを返す
+  const workbook = XLSX.readFile(path);
+  const sheet = workbook.Sheets['振込先マスタ'];
+  const csv = XLSX.utils.sheet_to_csv(sheet);
+  const records = csv.split('\n');
+
+  return records.map(record => record.split(','));
 })

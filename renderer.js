@@ -3,7 +3,8 @@ document.getElementById('csvLoad').onclick = (event) => {
 
   // メインプロセスを呼び出し
   (async () => {
-    const path = await window.FileOpenContext.open();
-    document.getElementById('file-name').innerText = path;
+    const path = await window.XlsxContext.open();
+    const xlsx = await window.XlsxContext.readXlsx(path[0]);
+    console.log(xlsx);
   })()
 };

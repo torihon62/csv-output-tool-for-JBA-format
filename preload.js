@@ -11,13 +11,18 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-const selectFile = async (message) => {
-  // renderer から Main プロセスを呼び出す
+const open = async (message) => {
   const data = await ipcRenderer.invoke('select-file');
   return data;
 };
 
-contextBridge.exposeInMainWorld('FileOpenContext', {
-    open: selectFile,
+const readXlsx = async (path) => {
+  const data = await ipcRenderer.invoke('read-xlsx', path);
+  return data;
+};
+
+contextBridge.exposeInMainWorld('XlsxContext', {
+    open,
+    readXlsx,
   }
 );
