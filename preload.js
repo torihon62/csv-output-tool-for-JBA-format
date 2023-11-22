@@ -5,13 +5,24 @@ window.addEventListener('DOMContentLoaded', () => {
     const element = document.getElementById(selector);
     if (element) element.innerText = text;
   }
-
-  for (const dependency of ['chrome', 'node', 'electron']) {
-    replaceText(`${dependency}-version`, process.versions[dependency]);
-  }
+  replaceText('tool-version', process.env.npm_package_version)
+  // for (const dependency of ['chrome', 'node', 'electron']) {
+  //   replaceText(`${dependency}-version`, process.versions[dependency]);
+  // }
 });
 
-const open = async (message) => {
+/**
+ * 設定ファイル関連
+ */
+const readSettings = async () => {
+
+};
+
+const saveSettings = async () => {
+
+};
+
+const open = async () => {
   const data = await ipcRenderer.invoke('select-file');
   return data;
 };

@@ -3,17 +3,135 @@
   <head>
     <meta charset="UTF-8">
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'">
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
     <title>Hello World!</title>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version"></span>,
-    and Electron <span id="electron-version"></span>.
-    <br>
-    <input id="csvLoad" type="button" value="読み込み"/>
-    fileName: <span id="file-name"></span>
+    <div class="container">
+      <div class="row">
+        <div class="col-3">
+          <p class="lead">
+            全銀協CSV出力ツール
+          </p>
+          <hr />
+          <div class="nav flex-column nav-pills me-3 text-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+            <button class="nav-link text-start active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
+              CSV出力実行画面
+            </button>
+            <button class="nav-link text-start" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+              設定画面
+            </button>
+          </div>
+        </div>
+        <div class="col">
+          <div class="tab-content" id="v-pills-tabContent">
+            <!-- アラート格納要素 -->
+            <div id="liveAlertPlaceholder" class="top-0 start-0 w-100 sticky-top"></div>
+
+            <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
+              <h1>CSV出力実行</h1>
+              <input id="csvLoad" type="button" value="読み込み"/>
+              fileName: <span id="file-name"></span>      
+            </div>
+            <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
+
+              <h1>設定</h1>
+              <form class="needs-validation" id="setting-form" name="settingForm" novalidate>
+                <h2>データレコード関連設定</h2>
+
+                <div class="form-group">
+                  <label for="consignor-code">委託者コード</label>
+                  <input type="text" class="form-control" id="consignor-code" name="consignorCode" required>
+                  <div class="invalid-feedback">委託者コードを入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="consignor-name">委託者金融機関名</label>
+                  <input type="text" class="form-control" id="consignor-name" name="consignorName" required>
+                  <div class="invalid-feedback">委託者金融機関名を入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="financial-institution-code">取引金融機関コード</label>
+                  <input type="text" class="form-control" id="financial-institution-code" name="financialInstitutionCode" required>
+                  <div class="invalid-feedback">取引金融機関コードを入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="financial-institution-name">取引金融機関名称</label>
+                  <input type="text" class="form-control" id="financial-institution-name" name="financialInstitutionName" required>
+                  <div class="invalid-feedback">取引金融機関名称を入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="financial-institution-branch-code">取引支店コード</label>
+                  <input type="text" class="form-control" id="financial-institution-branch-code" name="financialInstitutionBranchCode" required>
+                  <div class="invalid-feedback">取引支店コードを入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="financial-institution-branch-name">取引支店名称</label>
+                  <input type="text" class="form-control" id="financial-institution-branch-name" name="financialInstitutionBranchName" required>
+                  <div class="invalid-feedback">取引支店名称を入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="deposit-type">預金種類</label>
+                  <select class="form-select form-control" id="deposit-type" name="depositType" required>
+                    <option selected disabled value="">選択してください</option>
+                    <option value="1">1: 普通預金</option>
+                    <option value="2">2: 当座預金</option>
+                  </select>                  
+                  <div class="invalid-feedback">預金種類を選択してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="account-number">振込依頼人の口座番号</label>
+                  <input type="text" class="form-control" id="account-number" name="accountNumber" required>
+                  <div class="invalid-feedback">振込依頼人の口座番号を入力してください</div>
+                </div>
+
+                <h2>システム関連設定</h2>
+                <div class="form-group">
+                  <label for="payee-list-file-path">振込先マスタのファイルパス</label>
+                  <div class="row" style="display: flex; align-items: baseline;">
+                    <div class="col-9">
+                      <input type="text" class="form-control" id="payee-list-file-path" name="payeeListFilePath" required>
+                      <div class="invalid-feedback">振込先マスタのファイルパスを入力してください</div>
+                    </div>
+                    <div class="col">
+                      <input id="read-payee-list-file-button" type="button" value="ファイル読み込み" />
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="payee-list-file-sheet-name">振込先マスタのシート名</label>
+                  <input type="text" class="form-control" id="payee-list-file-sheet-name" name="payeeListFileSheetName" required>
+                  <div class="invalid-feedback">振込先マスタのシート名を入力してください</div>
+                </div>
+                <div class="form-group">
+                  <label for="csv-output-dist">実行結果CSVの出力先</label>
+                  <div class="row" style="display: flex; align-items: baseline;">
+                    <div class="col-9">
+                      <input type="text" class="form-control" id="csv-output-dist" name="csvOutputDist" required>
+                      <div class="invalid-feedback">実行結果CSVの出力先を入力してください</div>
+                    </div>
+                    <div class="col">
+                      <input id="read-output-file-dist" type="button" value="フォルダ読み込み"/>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+              </form>
+            </div>
+          </div>          
+        </div>
+      </div>
+      <div class="row">
+        <div class="col fixed-bottom text-end">
+          Tool Version: <span id="tool-version"></span>
+        </div>    
+      </row>
+    </div>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="./utils/showAlert.js"></script>
+    <script src="./utils/saveSettings.js"></script>
     <script src="./renderer.js"></script>
   </body>
 </html>
