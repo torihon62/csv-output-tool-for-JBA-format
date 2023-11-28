@@ -9,7 +9,6 @@ const Iconv = require('iconv-lite');
 const consts = require('./consts');
 const settingUtil = require('./utils/main/getSettings');
 const bankcodejp = require('./utils/main/bankcodejp');
-const kana = require('./utils/main/kana');
 
 const store = new Store();
 
@@ -56,6 +55,10 @@ ipcMain.handle('read-settings', (event) => {
   return settingUtil.getSettings();
 });
 
+ipcMain.handle('read-settings-hash-table', (event) => {
+  return settingUtil.getSettingsHashTable();
+});
+
 ipcMain.handle('save-settings', (event, payload) => {
   consts.SETTING_FORM_ENV.forEach(env => {
     store.set(env.formItemName, payload[env.formItemName].trim());
@@ -89,91 +92,49 @@ ipcMain.handle('select-file', (event) => {
   return path;
 });
 
-const readXlsx = (path, sheetName, header) => {
-  // renderer プロセスにデータを返す
+ipcMain.handle('read-xlsx', async (event, path, sheetName, header) => {
   const workbook = XLSX.readFile(path, { type: 'binary', cellText: false, cellDates: true, dense: true });
   const sheet = workbook.Sheets[sheetName];
   return XLSX.utils.sheet_to_json(sheet, { header, raw: false, dateNF: 'yyyy-mm-dd'});
-};
+});
 
-ipcMain.handle('output-csv-exec', async (event, paymentListFilePath, paymentListSheetName, paymentDateString) => {
-  // ヘッダレコード作成
+ipcMain.handle('make-data-record', async (event, payment, payeeList) => {
+  const paymentNo = payment[4];
+  const payee = payeeList.find(p => p[0] === paymentNo);
+  if (!payee) return [`支払先No${payment[0]}: 振込先マスタに振込先の情報がありません`];
+
+  const bankInfo = await bankcodejp.getBankBranchInfo(payee[2], payee[4]);
+  await setTimeout(2000);
+  if (!bankInfo.bank || !bankInfo.branches.length) {
+    console.log(`code: ${payee[2]}, branch: ${payee[4]}`);
+    return [`支店が見つかりませんでした。code: ${payee[2]}, branch: ${payee[4]}`]
+  }
+  
+  return [
+    '2',
+    payee[2],
+    bankInfo.bank.halfWidthKana,
+    payee[4],
+    bankInfo.branches[0].halfWidthKana,
+    '',
+    payee[6],
+    payee[7],
+    payee[8],
+    payment[9],
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+  ];
+});
+
+
+ipcMain.handle('output-csv-exec', async (event, csvArray) => {
+  await setTimeout(2000);
+
   const settings = settingUtil.getSettingsHashTable();
-  const payeeList = readXlsx(settings.payeeListFilePath, settings.payeeListFileSheetName, 1);
-  const paymentList = readXlsx(paymentListFilePath, paymentListSheetName, 1).filter((r, i) => i !== 0).filter(r => r.length);
-
-  const headerRecord = [
-    '1',
-    '21',
-    '0',
-    settings.consignorCode,
-    kana.fullToHalf(settings.consignorName),
-    paymentDateString,
-    settings.financialInstitutionCode,
-    settings.financialInstitutionName,
-    settings.financialInstitutionBranchCode,
-    settings.financialInstitutionBranchName,
-    settings.depositType,
-    settings.accountNumber,
-    '',
-  ];
-
-  let totalPaymentMoney = 0;
-
-  const dataRecords = await Promise.all(
-    paymentList.map(async (payment) => {
-      const paymentNo = payment[4];
-      const payee = payeeList.find(p => p[0] === paymentNo);
-      if (!payee) return [`支払先No${payment[0]}: 振込先マスタに振込先の情報がありません`];
-
-      const bankInfo = await bankcodejp.getBankBranchInfo(payee[2], payee[4]);
-      await setTimeout(1000);
-
-      if (!bankInfo.bank || !bankInfo.branches.length) {
-        console.log(`code: ${payee[2]}, branch: ${payee[4]}`);
-        return [`支店が見つかりませんでした。code: ${payee[2]}, branch: ${payee[4]}`]
-      }
-      totalPaymentMoney += +payment[9];
-      
-      return [
-        '2',
-        payee[2],
-        bankInfo.bank.halfWidthKana,
-        payee[4],
-        bankInfo.branches[0].halfWidthKana,
-        '',
-        payee[6],
-        payee[7],
-        kana.fullToHalf(payee[8]),
-        payment[9],
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-      ];
-    })
-  );
-
-  const trailerRecord = [
-    '8',
-    dataRecords.length,
-    totalPaymentMoney,
-    '',
-  ];
-
-  const endRecord = [
-    '9',
-    '',
-  ];
-
-  const csvArray = [
-    headerRecord,
-    ...dataRecords,
-    trailerRecord,
-    endRecord,
-  ];
   const csv = csvArray.map(record => record.join(',')).join('\r\n');
   const csvSjis = Iconv.encode(csv, 'Shift_JIS');
 
@@ -188,6 +149,8 @@ ipcMain.handle('output-csv-exec', async (event, paymentListFilePath, paymentList
   const filename = path.join(settings.csvOutputDist, `output_${year}${month}${day}${hour}${minute}${second}.csv`);
 
   fs.writeFileSync(filename, csvSjis);
+
+  return filename;
 });
 
 

@@ -36,25 +36,90 @@ document.getElementById('read-payment-list').onclick = (event) => {
   })();
 };
 
+
 document.getElementById('csv-output-exec-button').onclick = (event) => {
   const progressModal = new bootstrap.Modal(document.getElementById('progressModal'));
+  const messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
+
+  const isInvalidDate = (date) => Number.isNaN(date.getTime());
+  const progressUpdate = (percent) => {
+    const elem = document.getElementById('progress');
+    elem.setAttribute('style', `width: ${percent}%`);
+  };
+  
   (async () => {
+    progressUpdate(0);
     progressModal.show();
     
-    const isInvalidDate = (date) => Number.isNaN(date.getTime());
-
+    const settings = await window.SettingsContext.readSettingsHashTable();
+  
     const paymentListFilePath = document.getElementById('payment-list-file-path').value;
     const paymentListSheetName = document.getElementById('payment-list-sheet-name').value;
     const paymentDate = new Date(document.getElementById('payment-date').value);
     if (isInvalidDate(paymentDate)) return;
 
+    const payeeList = await window.XlsxContext.readXlsx(settings.payeeListFilePath, settings.payeeListFileSheetName, 1);
+    const paymentListNotFiltered = await window.XlsxContext.readXlsx(paymentListFilePath, paymentListSheetName, 1);
+    const paymentList = paymentListNotFiltered.filter((r, i) => i !== 0).filter(r => r.length);
+
     const month = ("0" + String(paymentDate.getMonth() + 1)).slice(-2);
     const day = ("0" + String(paymentDate.getDate())).slice(-2);
     const paymentDateString = `${month}${day}`;
 
-    await window.outputCsvContext.outputCsvExec(paymentListFilePath, paymentListSheetName, paymentDateString);
+    const headerRecord = [
+      '1',
+      '21',
+      '0',
+      settings.consignorCode,
+      kanaFullToHalf(settings.consignorName),
+      paymentDateString,
+      settings.financialInstitutionCode,
+      settings.financialInstitutionName,
+      settings.financialInstitutionBranchCode,
+      settings.financialInstitutionBranchName,
+      settings.depositType,
+      settings.accountNumber,
+      '',
+    ];
+
+    const dataRecords = [];
+    let totalPaymentMoney = 0;
+
+    for (let i = 0, l = paymentList.length; i < l; i++) {
+      progressUpdate((i / l) * 100);
+      const payment = paymentList[i];
+      const record = await window.outputCsvContext.makeDataRecord(payment, payeeList);
+
+      record[8] = kanaFullToHalf(record[8]);
+      totalPaymentMoney += +payment[9];
+      dataRecords.push(record);
+    }
+
+    const trailerRecord = [
+      '8',
+      dataRecords.length,
+      totalPaymentMoney,
+      '',
+    ];
+  
+    const endRecord = [
+      '9',
+      '',
+    ];
+
+    const csvArray = [
+      headerRecord,
+      ...dataRecords,
+      trailerRecord,
+      endRecord,
+    ];
+    progressUpdate(100);
+    const outputCsvPath = await window.outputCsvContext.outputCsvExec(csvArray);
 
     progressModal.hide();
+
+    document.getElementById('output-csv-path').innerHTML = outputCsvPath;
+    messageModal.show();
   })();
 };
 

@@ -1,4 +1,4 @@
-const fullToHalf = (str) => {
+const kanaFullToHalf = (str) => {
   let kanaMap = {
       "ガ": "ｶﾞ", "ギ": "ｷﾞ", "グ": "ｸﾞ", "ゲ": "ｹﾞ", "ゴ": "ｺﾞ",
       "ザ": "ｻﾞ", "ジ": "ｼﾞ", "ズ": "ｽﾞ", "ゼ": "ｾﾞ", "ゾ": "ｿﾞ",
@@ -25,8 +25,4 @@ const fullToHalf = (str) => {
   return str.replace(reg, function(s){
       return kanaMap[s];
   }).replace(/゛/g, 'ﾞ').replace(/゜/g, 'ﾟ');
-}
-
-module.exports = {
-  fullToHalf,
 }

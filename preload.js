@@ -6,13 +6,16 @@ window.addEventListener('DOMContentLoaded', () => {
     if (element) element.innerText = text;
   }
   replaceText('tool-version', process.env.npm_package_version)
-  // for (const dependency of ['chrome', 'node', 'electron']) {
-  //   replaceText(`${dependency}-version`, process.versions[dependency]);
-  // }
 });
 
-const outputCsvExec = async (paymentListFilePath, paymentListSheetName, paymentDateString) => {
-  await ipcRenderer.invoke('output-csv-exec', paymentListFilePath, paymentListSheetName, paymentDateString);
+const outputCsvExec = async (csvArray) => {
+  const d = await ipcRenderer.invoke('output-csv-exec', csvArray);
+  return d;
+};
+
+const makeDataRecord = async (payment, payeeList) => {
+  const d = await ipcRenderer.invoke('make-data-record', payment, payeeList);
+  return d;
 };
 
 const getBankInfo = async (bankCode, branchCode) => {
@@ -34,6 +37,11 @@ const importConsts = async () => {
  */
 const readSettings = async () => {
   const d = await ipcRenderer.invoke('read-settings');
+  return d;
+};
+
+const readSettingsHashTable = async () => {
+  const d = await ipcRenderer.invoke('read-settings-hash-table');
   return d;
 };
 
@@ -64,6 +72,10 @@ const open = async () => {
   return d;
 };
 
+const readXlsx = async (path, sheetName, header) => {
+  const d = await ipcRenderer.invoke('read-xlsx', path, sheetName, header);
+  return d;
+};
 
 /**
  * コンテキストブリッジ
@@ -74,6 +86,7 @@ contextBridge.exposeInMainWorld('initContext', {
 );
 contextBridge.exposeInMainWorld('SettingsContext', {
     readSettings,
+    readSettingsHashTable,
     saveSettings,
     clearSettings,
     selectPayeeListFile,
@@ -82,10 +95,12 @@ contextBridge.exposeInMainWorld('SettingsContext', {
 );
 contextBridge.exposeInMainWorld('XlsxContext', {
     open,
+    readXlsx,
   }
 );
 contextBridge.exposeInMainWorld('outputCsvContext', {
     outputCsvExec,
+    makeDataRecord,
   }
 );
 contextBridge.exposeInMainWorld('BankJpContext', {
