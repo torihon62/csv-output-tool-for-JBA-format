@@ -11,29 +11,84 @@ window.addEventListener('DOMContentLoaded', () => {
   // }
 });
 
+const outputCsvExec = async (paymentListFilePath, paymentListSheetName, paymentDateString) => {
+  await ipcRenderer.invoke('output-csv-exec', paymentListFilePath, paymentListSheetName, paymentDateString);
+};
+
+const getBankInfo = async (bankCode, branchCode) => {
+  const data = await ipcRenderer.invoke('get-bank-branch-info', bankCode, branchCode);
+  return data;
+};
+
+
+/**
+ * 初期処理
+ */
+const importConsts = async () => {
+  const data = await ipcRenderer.invoke('import-consts');
+  return data;
+};
+
 /**
  * 設定ファイル関連
  */
 const readSettings = async () => {
-
+  const d = await ipcRenderer.invoke('read-settings');
+  return d;
 };
 
-const saveSettings = async () => {
-
+const saveSettings = async (payload) => {
+  await ipcRenderer.invoke('save-settings', payload);
 };
 
+const selectPayeeListFile = async (payload) => {
+  const d = await ipcRenderer.invoke('select-payee-list');
+  return d;
+};
+
+const selectCsvDistDirectory = async (payload) => {
+  const d = await ipcRenderer.invoke('select-csv-dist-directory');
+  return d;
+};
+
+const clearSettings = async () => {
+  await ipcRenderer.invoke('clear-settings');
+};
+
+
+/**
+ * 支払いエクセル読み取り関連
+ */
 const open = async () => {
-  const data = await ipcRenderer.invoke('select-file');
-  return data;
+  const d = await ipcRenderer.invoke('select-file');
+  return d;
 };
 
-const readXlsx = async (path) => {
-  const data = await ipcRenderer.invoke('read-xlsx', path);
-  return data;
-};
 
+/**
+ * コンテキストブリッジ
+ */
+contextBridge.exposeInMainWorld('initContext', {
+    importConsts,
+  }
+);
+contextBridge.exposeInMainWorld('SettingsContext', {
+    readSettings,
+    saveSettings,
+    clearSettings,
+    selectPayeeListFile,
+    selectCsvDistDirectory,
+  }
+);
 contextBridge.exposeInMainWorld('XlsxContext', {
     open,
-    readXlsx,
+  }
+);
+contextBridge.exposeInMainWorld('outputCsvContext', {
+    outputCsvExec,
+  }
+);
+contextBridge.exposeInMainWorld('BankJpContext', {
+    getBankInfo,
   }
 );

@@ -5,21 +5,17 @@
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <link rel="stylesheet" href="./style.css">
     <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-    <title>Hello World!</title>
+    <title>全銀協CSV出力ツール</title>
   </head>
   <body>
     <div class="container">
       <div class="row">
         <div class="col-3">
-          <p class="lead">
-            全銀協CSV出力ツール
-          </p>
-          <hr />
           <div class="nav flex-column nav-pills me-3 text-start" id="v-pills-tab" role="tablist" aria-orientation="vertical">
             <button class="nav-link text-start active" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#v-pills-home" type="button" role="tab" aria-controls="v-pills-home" aria-selected="true">
               CSV出力実行画面
             </button>
-            <button class="nav-link text-start" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile" type="button" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+            <button class="nav-link text-start" id="v-pills-setting-tab" data-bs-toggle="pill" data-bs-target="#v-pills-setting" type="button" role="tab" aria-controls="v-pills-setting" aria-selected="false">
               設定画面
             </button>
           </div>
@@ -31,48 +27,65 @@
 
             <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab" tabindex="0">
               <h1>CSV出力実行</h1>
-              <input id="csvLoad" type="button" value="読み込み"/>
-              fileName: <span id="file-name"></span>      
+              <h2>1. 支払先が記入されているエクセルファイルを選択してください</h2>
+              <div class="row" style="display: flex; align-items: baseline;">
+                <div class="col-9">
+                  <input type="text" class="form-control" id="payment-list-file-path" required>
+                  <div class="invalid-feedback">ファイルパスを入力してください</div>
+                </div>
+                <div class="col">
+                  <input id="read-payment-list" type="button" value="ファイル読み込み"/>
+                </div>
+              </div>
+              <h2>2. 支払先が記入されているシート名を記入してください</h2>
+              <div class="row">
+                <div class="col">
+                  <input type="text" class="form-control" id="payment-list-sheet-name" value="支払" required>
+                </div>
+              </div>
+              <h2>3. 振込日を指定してください</h2>
+              <input type="date" class="form-control" id="payment-date" required>
+              <h2>4. 実行ボタンを押してCSVを出力してください</h2>
+              <button class="btn btn-primary" type="button" id="csv-output-exec-button">実行！</button>
             </div>
-            <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab" tabindex="0">
-
+            <div class="tab-pane fade" id="v-pills-setting" role="tabpanel" aria-labelledby="v-pills-setting-tab" tabindex="0">
               <h1>設定</h1>
               <form class="needs-validation" id="setting-form" name="settingForm" novalidate>
                 <h2>データレコード関連設定</h2>
-
                 <div class="form-group">
                   <label for="consignor-code">委託者コード</label>
-                  <input type="text" class="form-control" id="consignor-code" name="consignorCode" required>
+                  <input type="text" class="form-control" id="consignor-code" required>
                   <div class="invalid-feedback">委託者コードを入力してください</div>
                 </div>
                 <div class="form-group">
-                  <label for="consignor-name">委託者金融機関名</label>
-                  <input type="text" class="form-control" id="consignor-name" name="consignorName" required>
-                  <div class="invalid-feedback">委託者金融機関名を入力してください</div>
+                  <label for="consignor-name">委託者金融機関名（カナ）</label>
+                  <input type="text" class="form-control" id="consignor-name" required>
+                  <div class="invalid-feedback">委託者金融機関名（カナ）を入力してください</div>
+                  <div id="financial-institution-name-help" class="form-text">CSV出力する際に半角変換処理を行いますので、全角でも問題ないです</div>
                 </div>
                 <div class="form-group">
                   <label for="financial-institution-code">取引金融機関コード</label>
-                  <input type="text" class="form-control" id="financial-institution-code" name="financialInstitutionCode" required>
+                  <input type="text" class="form-control" id="financial-institution-code" required>
                   <div class="invalid-feedback">取引金融機関コードを入力してください</div>
                 </div>
                 <div class="form-group">
                   <label for="financial-institution-name">取引金融機関名称</label>
-                  <input type="text" class="form-control" id="financial-institution-name" name="financialInstitutionName" required>
-                  <div class="invalid-feedback">取引金融機関名称を入力してください</div>
+                  <input type="text" class="form-control" id="financial-institution-name" disabled>
+                  <div id="financial-institution-name-help" class="form-text">保存ボタンを押すと、取引金融機関コードから逆引きされます</div>
                 </div>
                 <div class="form-group">
                   <label for="financial-institution-branch-code">取引支店コード</label>
-                  <input type="text" class="form-control" id="financial-institution-branch-code" name="financialInstitutionBranchCode" required>
+                  <input type="text" class="form-control" id="financial-institution-branch-code" required>
                   <div class="invalid-feedback">取引支店コードを入力してください</div>
                 </div>
                 <div class="form-group">
                   <label for="financial-institution-branch-name">取引支店名称</label>
-                  <input type="text" class="form-control" id="financial-institution-branch-name" name="financialInstitutionBranchName" required>
-                  <div class="invalid-feedback">取引支店名称を入力してください</div>
+                  <input type="text" class="form-control" id="financial-institution-branch-name" disabled>
+                  <div id="financial-institution-name-help" class="form-text">保存ボタンを押すと、取引支店コードから逆引きされます</div>
                 </div>
                 <div class="form-group">
                   <label for="deposit-type">預金種類</label>
-                  <select class="form-select form-control" id="deposit-type" name="depositType" required>
+                  <select class="form-select form-control" id="deposit-type" required>
                     <option selected disabled value="">選択してください</option>
                     <option value="1">1: 普通預金</option>
                     <option value="2">2: 当座預金</option>
@@ -81,7 +94,7 @@
                 </div>
                 <div class="form-group">
                   <label for="account-number">振込依頼人の口座番号</label>
-                  <input type="text" class="form-control" id="account-number" name="accountNumber" required>
+                  <input type="text" class="form-control" id="account-number" required>
                   <div class="invalid-feedback">振込依頼人の口座番号を入力してください</div>
                 </div>
 
@@ -90,7 +103,7 @@
                   <label for="payee-list-file-path">振込先マスタのファイルパス</label>
                   <div class="row" style="display: flex; align-items: baseline;">
                     <div class="col-9">
-                      <input type="text" class="form-control" id="payee-list-file-path" name="payeeListFilePath" required>
+                      <input type="text" class="form-control" id="payee-list-file-path" required>
                       <div class="invalid-feedback">振込先マスタのファイルパスを入力してください</div>
                     </div>
                     <div class="col">
@@ -100,14 +113,14 @@
                 </div>
                 <div class="form-group">
                   <label for="payee-list-file-sheet-name">振込先マスタのシート名</label>
-                  <input type="text" class="form-control" id="payee-list-file-sheet-name" name="payeeListFileSheetName" required>
+                  <input type="text" class="form-control" id="payee-list-file-sheet-name" required>
                   <div class="invalid-feedback">振込先マスタのシート名を入力してください</div>
                 </div>
                 <div class="form-group">
                   <label for="csv-output-dist">実行結果CSVの出力先</label>
                   <div class="row" style="display: flex; align-items: baseline;">
                     <div class="col-9">
-                      <input type="text" class="form-control" id="csv-output-dist" name="csvOutputDist" required>
+                      <input type="text" class="form-control" id="csv-output-dist" required>
                       <div class="invalid-feedback">実行結果CSVの出力先を入力してください</div>
                     </div>
                     <div class="col">
@@ -117,6 +130,7 @@
                 </div>
                 <div class="form-group">
                   <button type="submit" class="btn btn-primary">保存</button>
+                  <button type="button" id="clear-form-button" class="btn btn-light">設定をクリア</button>
                 </div>
               </form>
             </div>
@@ -129,9 +143,27 @@
         </div>    
       </row>
     </div>
+
+    <!-- プログレス用のモーダル -->
+    <div class="modal fade" id="progressModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="progressModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="progressModalLabel">CSVの出力中です</h5>
+          </div>
+          <div class="modal-body">
+            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="./utils/showAlert.js"></script>
-    <script src="./utils/saveSettings.js"></script>
+    <script src="./utils/renderer/setSettingFormItemName.js"></script>
+    <script src="./utils/renderer/setInitialSettings.js"></script>
+    <script src="./utils/renderer/showAlert.js"></script>
+    <script src="./utils/renderer/saveSettings.js"></script>
     <script src="./renderer.js"></script>
   </body>
 </html>

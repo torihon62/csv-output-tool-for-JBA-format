@@ -9,5 +9,10 @@ const showAlert = (alertType, message) => {
 </div>
   `;
 
-  setInterval(() => {document.getElementById('alert-close-bottun').click()}, 5000);
+  setTimeout(closeAlert, 5000);
+};
+
+const closeAlert = () => {
+  const closeButton = document.getElementById('alert-close-bottun');
+  if (closeButton) closeButton.click();
 };
